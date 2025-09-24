@@ -1,25 +1,250 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIS5203 Week 9</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>昼夜图像显示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s ease;
+        }
+        
+        body.night-mode {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            transition: font-size 0.3s ease;
+        }
+        
+        .time-info {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .image-container {
+            margin: 30px 0;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #timeImage {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, opacity 0.5s ease;
+        }
+        
+        #timeImage:hover {
+            transform: scale(1.05);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .hidden {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 250px;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1 id="page-title">Welcome to BIS5203 Week 9</h1>
+    <div class="container">
+        <h1 id="pageTitle">昼夜图像显示</h1>
+        <p class="time-info" id="timeDisplay">当前时间将显示在这里</p>
+        
+        <div class="image-container">
+            <img id="timeImage" src="" alt="白天或夜晚图像">
+        </div>
+        
+        <div class="controls">
+            <button id="showBtn">
+                <i class="fas fa-eye"></i> 显示图像
+            </button>
+            <button id="hideBtn">
+                <i class="fas fa-eye-slash"></i> 隐藏图像
+            </button>
+            <button id="increaseFontBtn">
+                <i class="fas fa-search-plus"></i> 增大字体
+            </button>
+            <button id="decreaseFontBtn">
+                <i class="fas fa-search-minus"></i> 减小字体
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p>BIS5203 第9周作业 - GitHub 仓库示例</p>
+        </div>
+    </div>
 
-  <div class="controls">
-    <button onclick="showImage()">Show Image</button>
-    <button onclick="hideImage()">Hide Image</button>
-    <button onclick="increaseFont()">Increase Title Font</button>
-    <button onclick="decreaseFont()">Decrease Title Font</button>
-  </div>
-
-  <div id="image-container">
-    <img id="day-night-image" src="" alt="Day or Night">
-  </div>
-
-  <script src="js/script.js"></script>
+    <!-- Font Awesome 图标 -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <script>
+        // 根据当前时间设置相应图像的函数
+        function setTimeBasedImage() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const timeDisplay = document.getElementById('timeDisplay');
+            
+            // 格式化时间显示
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            timeDisplay.textContent = now.toLocaleDateString('zh-CN', options);
+            
+            const timeImage = document.getElementById('timeImage');
+            const body = document.body;
+            
+            // 检查是白天（下午5点前）还是夜晚（下午5点后）
+            if (currentHour <= 17) { // 下午5点或之前
+                timeImage.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                timeImage.alt = '代表白天的太阳';
+                body.classList.remove('night-mode');
+            } else { // 下午5点后
+                timeImage.src = 'https://images.unsplash.com/photo-1532978379173-523e6a31a1e1?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+                timeImage.alt = '代表夜晚的月亮';
+                body.classList.add('night-mode');
+            }
+            
+            // 确保图像初始可见
+            timeImage.classList.remove('hidden');
+        }
+        
+        // 显示图像的函数
+        function showImage() {
+            const timeImage = document.getElementById('timeImage');
+            timeImage.classList.remove('hidden');
+        }
+        
+        // 隐藏图像的函数
+        function hideImage() {
+            const timeImage = document.getElementById('timeImage');
+            timeImage.classList.add('hidden');
+        }
+        
+        // 增大页面标题字体大小的函数
+        function increaseFontSize() {
+            const title = document.getElementById('pageTitle');
+            let currentSize = parseFloat(window.getComputedStyle(title).fontSize);
+            title.style.fontSize = (currentSize + 5) + 'px';
+        }
+        
+        // 减小页面标题字体大小的函数
+        function decreaseFontSize() {
+            const title = document.getElementById('pageTitle');
+            let currentSize = parseFloat(window.getComputedStyle(title).fontSize);
+            // 防止字体过小
+            if (currentSize > 20) {
+                title.style.fontSize = (currentSize - 5) + 'px';
+            }
+        }
+        
+        // 页面加载时设置事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            // 根据时间设置初始图像
+            setTimeBasedImage();
+            
+            // 为按钮添加事件监听器
+            document.getElementById('showBtn').addEventListener('click', showImage);
+            document.getElementById('hideBtn').addEventListener('click', hideImage);
+            document.getElementById('increaseFontBtn').addEventListener('click', increaseFontSize);
+            document.getElementById('decreaseFontBtn').addEventListener('click', decreaseFontSize);
+            
+            // 每分钟更新一次时间显示
+            setInterval(setTimeBasedImage, 60000);
+        });
+    </script>
 </body>
 </html>
